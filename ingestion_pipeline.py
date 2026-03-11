@@ -68,6 +68,20 @@ def split_documents(documents, chunk_size=1000, chunk_overlap=0):
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
+    """Autres methodes de chunking:
+    -CharacterTextSplitter -> Divise les texte par separateurs( par defaut \n\n)
+    1. RecursiveCharacterTextSpliter(Version ameeliorer de CharacterTextSpliter) -> Divise les sequences naturelles commes(phrases, paragraphes,mots)
+        -Preserve le context des xhunks
+    2.Document-Specific Splitting(Respecte la structure des documents)
+        -pdf: diviser par pages, sections
+        -Chaque type de document a son traitement approprié
+    3.La Division Semantic(Semantic spliting)
+        -Utilise les embeddings pour detecter les meilleurs shifts
+        -Plus intelligent mais plus lourd
+    4. LA Division Agentic(Division propulser par l'IA)
+        -Le model analyse lui meme le contexte et decide des meilleurs divisions
+        -Est performant sur les relations complexe
+    """
     chunks=text_splitter.split_documents(documents)
     if chunks:
         for i, chunk in enumerate(chunks[:5]):
