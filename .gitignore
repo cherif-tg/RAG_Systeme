@@ -27,3 +27,5 @@
 venv/
 #database files
 *.db
+#pdf file
+*.pdf

@@ -1,6 +1,6 @@
 import os
 import time
-from langchain_community.document_loaders import TextLoader, DirectoryLoader
+from langchain_community.document_loaders import TextLoader, DirectoryLoader,PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
@@ -8,8 +8,33 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def load_pdf_documents(docs_path="docs_pdf"):
+    """Charge des documents pdf a partir du répertoire spécifié"""
+    print(f"Lecture des documents de {docs_path}")
+    #On verifie si le document existe
+    if not os.path.exists(docs_path):
+        raise FileNotFoundError(f"Le repertoire spécifié n'existe pas")
+    loader =DirectoryLoader(
+        path=docs_path,
+        glob="*.pdf",
+        loader_cls=PyPDFLoader,
+        loader_kwargs={"encoding":"utf-8"}
+    )
+    documents=loader.load()
+    if len(documents) == 0:
+        raise FileNotFoundError(f"Le repertoire est vide")
+    
+    for i, doc in enumerate(documents[:4],1):
+        print(f"\nDocument{i}:")
+        print(f"Source:{doc.metadata['source']}")
+        print(f"Longueur du contenu :{len(doc.page_content)} caracteres")
+        print(f"Debut du document :{doc.page_content[:100]}")
+        print(f"metadata:{doc.metadata}")
+    return documents
+    
+
 def load_documents(docs_path = "docs"):
-    """Charge les documents à partir du répertoire spécifié et affiche des informations sur les deux premiers documents."""
+    """Charge les documents txt à partir du répertoire spécifié et affiche des informations sur les deux premiers documents."""
     #Verifier si docs existe
     print(f"Lecture des fichiers depuis {docs_path}...")
     if not os.path.exists(docs_path):
@@ -60,9 +85,10 @@ def split_documents(documents, chunk_size=1000, chunk_overlap=0):
 def create_vector_store(chunks, persist_directory="chroma_db", batch_size=80):
     """Crée une base de données vectorielle à partir des morceaux de documents"""
 
-    print("---Création de la base de données vectorielle---")
+    print("---Création de la base de données vectorielle---") 
     embeddings_model = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
+    #Divisions des chunks en lot de 80 pour ne pas depasser de l'api gemini gratuit
     total_batches = (len(chunks) - 1) // batch_size + 1
     vector_store = None
 
