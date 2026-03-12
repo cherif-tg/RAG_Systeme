@@ -7,6 +7,12 @@ from langchain_chroma import Chroma
 from dotenv import load_dotenv
 
 load_dotenv()
+"""from langchain_huggingface import HuggingFaceEmbeddings
+
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"  # léger & efficace
+    # ou "BAAI/bge-m3" pour le multilingue (français inclus)
+)"""
 
 def load_pdf_documents(docs_path="docs_pdf"):
     """Charge des documents pdf a partir du répertoire spécifié"""

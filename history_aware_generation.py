@@ -1,8 +1,8 @@
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_core.messages import HumanMessage,SystemMessage,AIMessage
-from langchain_google_genai import GoogleGenerativeAIEmbeddings,GoogleGenerativeAI
-
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_groq import ChatGroq
 load_dotenv()
 #Se connecter a notre base de representations vectorielle
 
@@ -10,7 +10,8 @@ persistent_directory = "chroma_db"
 embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 db=Chroma(persist_directory=persistent_directory,embedding_function=embeddings)
 
-model = GoogleGenerativeAI(model="")
+model = ChatGroq(model="llama-3.1-8b-instant",temperature=0.2)
+
 
 #Enregistrer les converastions
 
@@ -35,7 +36,7 @@ def ask_question(user_question):
         search_question =user_question
     
     #step2: Rechercher les documents les plus relevant
-    retriver = db.as_retriever(sreach_kwargs={"k":3})
+    retriver = db.as_retriever(search_kwargs={"k":3})
     docs =retriver.invoke(search_question)
     
     print(f"Found {len(docs)} relevant documents:")
@@ -46,11 +47,12 @@ def ask_question(user_question):
         print(f"  Doc {i} :{preview}...")
         
     #Step3: Le prompt final
+    docs_text = "\n".join([f"- {doc.page_content}" for doc in docs])
     combined_input = f"""En te basant sur les documents suivants, Repond a cette question: {user_question}
     
     Documents:
-    {"\n".join([f"- {doc.page_content} " for doc in docs])}
-    Donne une réponse claire et utile en utilisant unique ment les informations des documents.Si tu ne peux pas trouveer la réponse dans les documents , dit"Je n'ai pas assez d'information pour repondre a la question basé sur le précédant document."
+    {docs_text}
+    Donne une réponse claire et utile en utilisant unique ment les informations des documents.Si tu ne peux pas trouveer la réponse dans les documents , dit -Je n'ai pas assez d'information pour repondre a la question basé sur le précédant document-.
     """
     #step4: Recuperer la reponse
     messages= [

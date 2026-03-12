@@ -1,7 +1,7 @@
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from dotenv import load_dotenv
-from langchain_google_genai import GoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage,SystemMessage
 
 load_dotenv()
@@ -21,7 +21,7 @@ db = Chroma(
 
 #Rechercher Les k chunks les plus interessant
 
-query = input("../")
+query = input("Posez votre question : ")
 
 retriver = db.as_retriever(search_kwargs={"k":3})
 #search_type ="similarity_score_threshold"
@@ -52,7 +52,10 @@ S'il te plait fournis une réponse claire et utile en te basant uniquement sur c
 
 #Create a Genai
 
-model = GoogleGenerativeAI(model="")
+model = ChatGoogleGenerativeAI(
+                            model="gemini-2.0-flash",
+                            temperature=0.2   
+)
 
 #Definor le message pour le model
 messages = [
@@ -61,13 +64,16 @@ messages = [
 ]
 
 #Appeler le resultat
-
-result = model.invoke(messages)
-
-#Afficher la reponse
-
-print(f"\n---Reponse Generer!!---")
-#Full result
-#print(result)
-print("Content Only:")
-print(result.content)
+try:
+    result = model.invoke(messages)
+    print(f"\n---Reponse Generee---")
+    print(result.content)
+except Exception as e:
+    error_msg = str(e)
+    if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+        print("\n[ERREUR] Quota API dépassé (429 RESOURCE_EXHAUSTED).")
+        print("Le quota journalier gratuit de génération de texte est épuisé.")
+        print("Solutions :")
+        print("  1. Attendez minuit (heure Pacifique) pour la réinitialisation du quota.")
+        print("  2. Activez la facturation sur votre projet Google Cloud.")
+        print("  3. Consultez https://ai.dev/rate-limit pour surveiller votre usage.")
